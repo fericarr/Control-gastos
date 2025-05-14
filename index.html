@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Gastos Mensuales Personalizable</title>
+    <!-- Font Awesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .table-section, .chart-section {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            flex: 1;
+            min-width: 400px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #e9e9e9;
+            font-weight: bold;
+        }
+        td input[type="number"], td input[type="text"] {
+            width: 90%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        td.description {
+            width: 40%;
+            position: relative; /* Para el posicionamiento del selector de color */
+        }
+        td.amount {
+            width: 30%;
+            text-align: right;
+        }
+        td.amount input[type="number"] {
+            text-align: right;
+        }
+        .total-row td {
+            font-weight: bold;
+            background-color: #f0f0f0;
+        }
+        .saldo-favor td {
+            font-weight: bold;
+            color: green;
+            background-color: #e6ffe6;
+        }
+        .saldo-contra td {
+            font-weight: bold;
+            color: red;
+            background-color: #ffe6e6;
+        }
+        .highlight { /* Color amarillo por defecto para ciertas filas */
+            background-color: #ffff99 !important;
+        }
+        h1, h2 {
+            color: #333;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+        h2 .fas {
+            margin-right: 8px;
+            color: #555;
+        }
+        .summary-section {
+            width: 100%;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex; /* Para centrar el contenido */
+            flex-direction: column; /* Para que el h2 y la tabla se apilen */
+            align-items: center; /* Centrar horizontalmente */
+        }
+        .summary-section h2 {
+            width: 100%; /* Que el h2 ocupe el ancho para el borde inferior */
+            text-align: center; /* Centrar el texto del h2 */
+        }
+        .summary-section table {
+            width: auto; /* No forzar ancho completo */
+            margin-top: 10px; /* Espacio después del h2 */
+        }
+        .summary-section td {
+            text-align: right; /* Alinea el texto de las celdas del resumen a la derecha */
+        }
+        .summary-section td:first-child {
+            font-weight: bold;
+        }
+
+        .add-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+        .add-button:hover {
+            background-color: #45a049;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .color-picker-icon {
+            cursor: pointer;
+            margin-left: 5px;
+            color: #777;
+        }
+        .color-picker-icon:hover {
+            color: #333;
+        }
+        .color-input { /* Ocultar el input de color por defecto */
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+
+<h1><i class="fas fa-wallet"></i> Control de Gastos Mensuales</h1>
+
+<div class="container">
+    <!-- Columna Izquierda: Presupuesto GASTOS FIJOS -->
+    <div class="table-section">
+        <h2><i class="fas fa-clipboard-list"></i> GASTOS MENSUALES FIJOS (PRESUPUESTO)</h2>
+        <table id="gastosFijosPresupuestoTable">
+            <thead>
+                <tr>
+                    <th>Descripción <i class="fas fa-palette" style="font-size:0.8em; color:#aaa;" title="Haga clic en el icono de la fila para cambiar el color"></i></th>
+                    <th>Debe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td class="description">apoyo mama fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="200000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">tajerta rapi + thor + lu + gasolina + comida <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="2410000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">Pago cuota + administracion <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="2000000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">servicios casa bogota <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="200000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">mercado mensual casa bgta <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="320000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">esposa varios <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">cosas fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">celular mio <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="50000" oninput="calculateAll()"></td></tr>
+                <tr class="highlight"><td class="description">ahorro bolsillo <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
+                <tr class="highlight"><td class="description">gasolina carro <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
+                <tr class="highlight"><td class="description">bolsillo mtto carro <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">fusa karen <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
+                <tr class="highlight"><td class="description">thor bolsillo <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">abue fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">valentina Universidad <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="150000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">pasajes karen <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="130000" oninput="calculateAll()"></td></tr>
+            </tbody>
+            <tfoot>
+                <tr class="total-row"><td>Total Presupuestado</td><td id="totalFijosPresupuesto" class="amount">0</td></tr>
+                <tr class="total-row"><td>Sueldos</td><td><input type="number" id="sueldosPresupuesto" value="7300000" oninput="calculateAll()"></td></tr>
+                <tr class="saldo-favor"><td>Saldo a Favor (Presupuesto)</td><td id="saldoFijosPresupuesto" class="amount">0</td></tr>
+            </tfoot>
+        </table>
+
+        <h2><i class="fas fa-credit-card"></i> DEUDAS (PRESUPUESTO)</h2>
+        <table id="deudasPresupuestoTable">
+             <thead>
+                <tr>
+                    <th>Descripción <i class="fas fa-palette" style="font-size:0.8em; color:#aaa;" title="Haga clic en el icono de la fila para cambiar el color"></i></th>
+                    <th>Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td class="description">TARJETA RAPPY <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="6800000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">DAVIPLATA <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="250000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description"><input type="text" placeholder="Nueva deuda..."> <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" oninput="calculateAll()"></td></tr>
+            </tbody>
+            <tfoot>
+                <tr class="total-row"><td>Total Deudas (Presupuesto)</td><td id="totalDeudasPresupuesto" class="amount">0</td></tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Columna Derecha: Gastos Reales / Pagados -->
+    <div class="table-section">
+        <h2><i class="fas fa-money-check-alt"></i> GASTOS MENSUALES FIJOS (PAGADO)</h2>
+        <table id="gastosFijosPagadosTable">
+            <thead>
+                <tr>
+                    <th>Descripción <i class="fas fa-palette" style="font-size:0.8em; color:#aaa;" title="Haga clic en el icono de la fila para cambiar el color"></i></th>
+                    <th>Pagado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td class="description">apoyo mama fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="200000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">tajerta rapi + thor + lu <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">Pago cuota + administracion <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="2000000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">servicios casa bogota <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="200000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">mercado mensual casa bgta <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="320000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">esposa varios <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">cosas fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">celular mio <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="50000" oninput="calculateAll()"></td></tr>
+                <tr class="highlight"><td class="description">ahorro bolsillo <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
+                <tr class="highlight"><td class="description">gasolina carro <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
+                <tr class="highlight"><td class="description">bolsillo mtto carro <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">fusa karen <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
+                <tr class="highlight"><td class="description">thor bolsillo <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">abue fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">valentina Universidad <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="150000" oninput="calculateAll()"></td></tr>
+                <tr><td class="description">pasajes karen <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="130000" oninput="calculateAll()"></td></tr>
+            </tbody>
+            <tfoot>
+                <tr class="total-row"><td>Total Pagado</td><td id="totalFijosPagado" class="amount">0</td></tr>
+                <tr class="total-row"><td>Sueldos</td><td><input type="number" id="sueldosPagado" value="7300000" oninput="calculateAll()"></td></tr>
+                <tr class="saldo-favor"><td>Saldo a Favor Gastos Fijos</td><td id="saldoFijosPagado" class="amount">0</td></tr>
+            </tfoot>
+        </table>
+
+        <h2><i class="fas fa-cart-plus"></i> GASTOS ADICIONALES (PAGADO)</h2>
+        <button onclick="addGastoAdicionalRow()" class="add-button"><i class="fas fa-plus"></i> Añadir Gasto</button>
+        <table id="gastosAdicionalesTable">
+            <thead>
+                <tr>
+                    <th>Descripción <i class="fas fa-palette" style="font-size:0.8em; color:#aaa;" title="Haga clic en el icono de la fila para cambiar el color"></i></th>
+                    <th>Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td class="description"><input type="text" placeholder="Descripción adicional..."> <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" oninput="calculateAll()"></td></tr>
+            </tbody>
+            <tfoot>
+                <tr class="total-row"><td>Total Gastos Adicionales</td><td id="totalAdicionales" class="amount">0</td></tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="summary-section">
+    <h2><i class="fas fa-file-invoice-dollar"></i> RESUMEN FINAL (basado en PAGADO donde aplique)</h2>
+    <table>
+        <tbody>
+            <tr class="saldo-favor"><td>SALDO A FAVOR DISPONIBLE (Presupuesto - Adicionales)</td><td id="saldoFinalDisponible" class="amount">0</td></tr>
+            <tr class="saldo-favor"><td>SALDO A FAVOR TOTAL (Pagado)</td><td id="saldoFinalTotalPagado" class="amount">0</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="chart-section">
+    <h2><i class="fas fa-chart-bar"></i> Estadística de Gastos (Pagado)</h2>
+    <div class="chart-container">
+        <canvas id="gastosChart"></canvas>
+    </div>
+</div>
+
+
+<script>
+    let gastosChartInstance = null;
+
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+    }
+
+    function openColorPicker(iconElement) {
+        // Encuentra el input de color hermano del icono y simula un clic
+        const colorInput = iconElement.nextElementSibling;
+        if (colorInput && colorInput.type === 'color') {
+            colorInput.click();
+        }
+    }
+
+    function changeRowColor(colorInputElement) {
+        const row = colorInputElement.closest('tr'); // Obtiene la fila (tr) padre
+        if (row) {
+            row.style.backgroundColor = colorInputElement.value;
+            row.classList.remove('highlight'); // Quitar la clase 'highlight' si se elige un color
+        }
+    }
+
+    function addGastoAdicionalRow() {
+        const tableBody = document.getElementById('gastosAdicionalesTable').getElementsByTagName('tbody')[0];
+        const newRow = tableBody.insertRow();
+        const cell1 = newRow.insertCell();
+        const cell2 = newRow.insertCell();
+
+        cell1.classList.add('description');
+        cell1.innerHTML = `<input type="text" placeholder="Descripción adicional..."> <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)">`;
+        cell2.innerHTML = '<input type="number" oninput="calculateAll()">';
+        calculateAll();
+    }
+
+    function calculateAll() {
+        // GASTOS FIJOS PRESUPUESTO (IZQUIERDA)
+        let totalFijosPresupuesto = 0;
+        document.querySelectorAll('#gastosFijosPresupuestoTable tbody tr').forEach(row => {
+            const input = row.cells[1].querySelector('input[type="number"]');
+            if (input) totalFijosPresupuesto += parseFloat(input.value) || 0;
+        });
+        document.getElementById('totalFijosPresupuesto').textContent = formatCurrency(totalFijosPresupuesto);
+
+        const sueldosPresupuesto = parseFloat(document.getElementById('sueldosPresupuesto').value) || 0;
+        const saldoFijosPresupuesto = sueldosPresupuesto - totalFijosPresupuesto;
+        document.getElementById('saldoFijosPresupuesto').textContent = formatCurrency(saldoFijosPresupuesto);
+        updateSaldoClass(document.getElementById('saldoFijosPresupuesto').parentElement, saldoFijosPresupuesto);
+
+
+        // DEUDAS PRESUPUESTO (IZQUIERDA)
+        let totalDeudasPresupuesto = 0;
+        document.querySelectorAll('#deudasPresupuestoTable tbody tr').forEach(row => {
+            const input = row.cells[1].querySelector('input[type="number"]');
+            if (input) totalDeudasPresupuesto += parseFloat(input.value) || 0;
+        });
+        document.getElementById('totalDeudasPresupuesto').textContent = formatCurrency(totalDeudasPresupuesto);
+
+
+        // GASTOS FIJOS PAGADOS (DERECHA)
+        let totalFijosPagado = 0;
+        document.querySelectorAll('#gastosFijosPagadosTable tbody tr').forEach(row => {
+            const input = row.cells[1].querySelector('input[type="number"]');
+            if (input) totalFijosPagado += parseFloat(input.value) || 0;
+        });
+        document.getElementById('totalFijosPagado').textContent = formatCurrency(totalFijosPagado);
+
+        const sueldosPagado = parseFloat(document.getElementById('sueldosPagado').value) || 0;
+        const saldoFijosPagado = sueldosPagado - totalFijosPagado;
+        document.getElementById('saldoFijosPagado').textContent = formatCurrency(saldoFijosPagado);
+        updateSaldoClass(document.getElementById('saldoFijosPagado').parentElement, saldoFijosPagado);
+
+        // GASTOS ADICIONALES (DERECHA)
+        let totalAdicionales = 0;
+        document.querySelectorAll('#gastosAdicionalesTable tbody tr').forEach(row => {
+            const input = row.cells[1].querySelector('input[type="number"]');
+            if (input) totalAdicionales += parseFloat(input.value) || 0;
+        });
+        document.getElementById('totalAdicionales').textContent = formatCurrency(totalAdicionales);
+
+
+        // RESUMEN FINAL
+        const saldoDisponibleImagen = saldoFijosPresupuesto - totalAdicionales;
+        document.getElementById('saldoFinalDisponible').textContent = formatCurrency(saldoDisponibleImagen);
+        updateSaldoClass(document.getElementById('saldoFinalDisponible').parentElement, saldoDisponibleImagen);
+
+        const saldoTotalPagadoConAdicionales = saldoFijosPagado - totalAdicionales;
+        document.getElementById('saldoFinalTotalPagado').textContent = formatCurrency(saldoTotalPagadoConAdicionales);
+        updateSaldoClass(document.getElementById('saldoFinalTotalPagado').parentElement, saldoTotalPagadoConAdicionales);
+
+        updateChart(totalFijosPagado + totalAdicionales, saldoTotalPagadoConAdicionales);
+    }
+
+    function updateSaldoClass(element, value) {
+        element.classList.remove('saldo-favor', 'saldo-contra');
+        if (value >= 0) {
+            element.classList.add('saldo-favor');
+        } else {
+            element.classList.add('saldo-contra');
+        }
+    }
+
+    function updateChart(totalGastado, saldoFavor) {
+        const ctx = document.getElementById('gastosChart').getContext('2d');
+        const data = {
+            labels: ['Total Gastado (Pagado)', 'Saldo a Favor Final (Pagado)'],
+            datasets: [{
+                label: 'Monto (COP)',
+                data: [Math.max(0, totalGastado), Math.max(0, saldoFavor)],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(75, 192, 192, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        if (gastosChartInstance) {
+            gastosChartInstance.data = data;
+            gastosChartInstance.update();
+        } else {
+            gastosChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return formatCurrency(value); }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    window.onload = function() {
+        calculateAll();
+         // Aplicar colores iniciales a las filas "highlight" para que el picker funcione sobre ellas también
+        document.querySelectorAll('tr.highlight').forEach(row => {
+            const existingColor = window.getComputedStyle(row).backgroundColor;
+            const colorInput = row.querySelector('.color-input');
+            if (colorInput) {
+                // No es perfecto convertir rgb a hex aquí, pero para el picker inicializa con negro si no se establece
+                // Un método más robusto sería convertir el RGB a HEX si fuera necesario, pero el picker por defecto funciona.
+            }
+        });
+    };
+</script>
+
+</body>
+</html>
