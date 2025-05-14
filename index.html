@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Gastos Mensuales Personalizable</title>
+    <title>Control de Gastos Mensuales (Guardado Local)</title>
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- Chart.js CDN -->
@@ -19,13 +19,20 @@
             flex-wrap: wrap;
             gap: 20px;
         }
-        .table-section, .chart-section {
+        .table-section, .chart-section, .actions-section {
             background-color: #fff;
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .table-section, .chart-section {
             flex: 1;
             min-width: 400px;
+        }
+        .actions-section {
+            width: 100%; /* Ocupar todo el ancho */
+            text-align: center;
+            margin-bottom: 20px;
         }
         table {
             width: 100%;
@@ -42,7 +49,7 @@
             font-weight: bold;
         }
         td input[type="number"], td input[type="text"] {
-            width: 90%;
+            width: calc(100% - 12px); /* Ajustar para padding */
             padding: 5px;
             border: 1px solid #ccc;
             border-radius: 4px;
@@ -50,7 +57,7 @@
         }
         td.description {
             width: 40%;
-            position: relative; /* Para el posicionamiento del selector de color */
+            position: relative;
         }
         td.amount {
             width: 30%;
@@ -73,7 +80,7 @@
             color: red;
             background-color: #ffe6e6;
         }
-        .highlight { /* Color amarillo por defecto para ciertas filas */
+        .highlight {
             background-color: #ffff99 !important;
         }
         h1, h2 {
@@ -92,24 +99,42 @@
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            display: flex; /* Para centrar el contenido */
-            flex-direction: column; /* Para que el h2 y la tabla se apilen */
-            align-items: center; /* Centrar horizontalmente */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .summary-section h2 {
-            width: 100%; /* Que el h2 ocupe el ancho para el borde inferior */
-            text-align: center; /* Centrar el texto del h2 */
+            width: 100%;
+            text-align: center;
         }
         .summary-section table {
-            width: auto; /* No forzar ancho completo */
-            margin-top: 10px; /* Espacio después del h2 */
+            width: auto;
+            margin-top: 10px;
         }
         .summary-section td {
-            text-align: right; /* Alinea el texto de las celdas del resumen a la derecha */
+            text-align: right;
         }
         .summary-section td:first-child {
             font-weight: bold;
         }
+
+        .action-button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+        }
+        .action-button:hover {
+            background-color: #0056b3;
+        }
+         .action-button.save { background-color: #28a745; }
+        .action-button.save:hover { background-color: #1e7e34; }
+        .action-button.clear { background-color: #dc3545; }
+        .action-button.clear:hover { background-color: #c82333; }
 
         .add-button {
             background-color: #4CAF50;
@@ -137,17 +162,36 @@
         .color-picker-icon:hover {
             color: #333;
         }
-        .color-input { /* Ocultar el input de color por defecto */
+        .color-input {
             opacity: 0;
             width: 0;
             height: 0;
             position: absolute;
+        }
+        #saveNotification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
 
 <h1><i class="fas fa-wallet"></i> Control de Gastos Mensuales</h1>
+
+<div class="actions-section">
+    <button onclick="saveAllData()" class="action-button save"><i class="fas fa-save"></i> Guardar Datos</button>
+    <button onclick="clearSavedData()" class="action-button clear"><i class="fas fa-trash-alt"></i> Borrar Datos Guardados</button>
+</div>
+<div id="saveNotification">¡Datos guardados localmente!</div>
+
 
 <div class="container">
     <!-- Columna Izquierda: Presupuesto GASTOS FIJOS -->
@@ -161,22 +205,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr><td class="description">apoyo mama fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="200000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">tajerta rapi + thor + lu + gasolina + comida <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="2410000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">Pago cuota + administracion <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="2000000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">servicios casa bogota <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="200000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">mercado mensual casa bgta <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="320000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">esposa varios <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">cosas fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">celular mio <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="50000" oninput="calculateAll()"></td></tr>
-                <tr class="highlight"><td class="description">ahorro bolsillo <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
-                <tr class="highlight"><td class="description">gasolina carro <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
-                <tr class="highlight"><td class="description">bolsillo mtto carro <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">fusa karen <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
-                <tr class="highlight"><td class="description">thor bolsillo <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">abue fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">valentina Universidad <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="150000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">pasajes karen <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="130000" oninput="calculateAll()"></td></tr>
+                <!-- Filas se generan o cargan por JS -->
             </tbody>
             <tfoot>
                 <tr class="total-row"><td>Total Presupuestado</td><td id="totalFijosPresupuesto" class="amount">0</td></tr>
@@ -194,9 +223,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr><td class="description">TARJETA RAPPY <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="6800000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">DAVIPLATA <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="250000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description"><input type="text" placeholder="Nueva deuda..."> <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" oninput="calculateAll()"></td></tr>
+                <!-- Filas se generan o cargan por JS -->
             </tbody>
             <tfoot>
                 <tr class="total-row"><td>Total Deudas (Presupuesto)</td><td id="totalDeudasPresupuesto" class="amount">0</td></tr>
@@ -215,22 +242,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr><td class="description">apoyo mama fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="200000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">tajerta rapi + thor + lu <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">Pago cuota + administracion <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="2000000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">servicios casa bogota <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="200000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">mercado mensual casa bgta <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="320000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">esposa varios <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">cosas fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">celular mio <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="50000" oninput="calculateAll()"></td></tr>
-                <tr class="highlight"><td class="description">ahorro bolsillo <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
-                <tr class="highlight"><td class="description">gasolina carro <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
-                <tr class="highlight"><td class="description">bolsillo mtto carro <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">fusa karen <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
-                <tr class="highlight"><td class="description">thor bolsillo <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="0" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">abue fabian <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="100000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">valentina Universidad <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="150000" oninput="calculateAll()"></td></tr>
-                <tr><td class="description">pasajes karen <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" value="130000" oninput="calculateAll()"></td></tr>
+                <!-- Filas se generan o cargan por JS -->
             </tbody>
             <tfoot>
                 <tr class="total-row"><td>Total Pagado</td><td id="totalFijosPagado" class="amount">0</td></tr>
@@ -249,7 +261,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr><td class="description"><input type="text" placeholder="Descripción adicional..."> <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)"></td><td><input type="number" oninput="calculateAll()"></td></tr>
+                <!-- Filas se generan o cargan por JS -->
             </tbody>
             <tfoot>
                 <tr class="total-row"><td>Total Gastos Adicionales</td><td id="totalAdicionales" class="amount">0</td></tr>
@@ -278,13 +290,68 @@
 
 <script>
     let gastosChartInstance = null;
+    const LS_KEY_PRESUPUESTO_FIJOS = 'gastosFijosPresupuestoData';
+    const LS_KEY_DEUDAS = 'deudasPresupuestoData';
+    const LS_KEY_PAGADOS_FIJOS = 'gastosFijosPagadosData';
+    const LS_KEY_ADICIONALES = 'gastosAdicionalesData';
+    const LS_KEY_SUELDOS = 'sueldosData'; // Para guardar ambos sueldos
+
+    // Datos por defecto si no hay nada guardado
+    const defaultPresupuestoFijos = [
+        { desc: "apoyo mama fabian", amount: 200000, color: "" },
+        { desc: "tajerta rapi + thor + lu + gasolina + comida", amount: 2410000, color: "" },
+        { desc: "Pago cuota + administracion", amount: 2000000, color: "" },
+        { desc: "servicios casa bogota", amount: 200000, color: "" },
+        { desc: "mercado mensual casa bgta", amount: 320000, color: "" },
+        { desc: "esposa varios", amount: 100000, color: "" },
+        { desc: "cosas fabian", amount: 100000, color: "" },
+        { desc: "celular mio", amount: 50000, color: "" },
+        { desc: "ahorro bolsillo", amount: 0, color: "#ffff99" },
+        { desc: "gasolina carro", amount: 0, color: "#ffff99" },
+        { desc: "bolsillo mtto carro", amount: 0, color: "#ffff99" },
+        { desc: "fusa karen", amount: 100000, color: "" },
+        { desc: "thor bolsillo", amount: 0, color: "#ffff99" },
+        { desc: "abue fabian", amount: 100000, color: "" },
+        { desc: "valentina Universidad", amount: 150000, color: "" },
+        { desc: "pasajes karen", amount: 130000, color: "" }
+    ];
+    const defaultDeudas = [
+        { desc: "TARJETA RAPPY", amount: 6800000, color: "" },
+        { desc: "DAVIPLATA", amount: 250000, color: "" },
+        { desc: "", amount: null, color: "" } // Fila vacía por defecto
+    ];
+     const defaultPagadosFijos = [ // Similar a presupuesto pero con valores de la imagen
+        { desc: "apoyo mama fabian", amount: 200000, color: "" },
+        { desc: "tajerta rapi + thor + lu", amount: 0, color: "" },
+        { desc: "Pago cuota + administracion", amount: 2000000, color: "" },
+        { desc: "servicios casa bogota", amount: 200000, color: "" },
+        { desc: "mercado mensual casa bgta", amount: 320000, color: "" },
+        { desc: "esposa varios", amount: 100000, color: "" },
+        { desc: "cosas fabian", amount: 100000, color: "" },
+        { desc: "celular mio", amount: 50000, color: "" },
+        { desc: "ahorro bolsillo", amount: 0, color: "#ffff99" },
+        { desc: "gasolina carro", amount: 0, color: "#ffff99" },
+        { desc: "bolsillo mtto carro", amount: 0, color: "#ffff99" },
+        { desc: "fusa karen", amount: 100000, color: "" },
+        { desc: "thor bolsillo", amount: 0, color: "#ffff99" },
+        { desc: "abue fabian", amount: 100000, color: "" },
+        { desc: "valentina Universidad", amount: 150000, color: "" },
+        { desc: "pasajes karen", amount: 130000, color: "" }
+    ];
+    const defaultAdicionales = [
+        { desc: "", amount: null, color: "" } // Una fila vacía por defecto
+    ];
+    const defaultSueldos = {
+        presupuesto: 7300000,
+        pagado: 7300000
+    };
+
 
     function formatCurrency(value) {
-        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
+        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value || 0);
     }
 
     function openColorPicker(iconElement) {
-        // Encuentra el input de color hermano del icono y simula un clic
         const colorInput = iconElement.nextElementSibling;
         if (colorInput && colorInput.type === 'color') {
             colorInput.click();
@@ -292,41 +359,77 @@
     }
 
     function changeRowColor(colorInputElement) {
-        const row = colorInputElement.closest('tr'); // Obtiene la fila (tr) padre
+        const row = colorInputElement.closest('tr');
         if (row) {
             row.style.backgroundColor = colorInputElement.value;
-            row.classList.remove('highlight'); // Quitar la clase 'highlight' si se elige un color
+            row.classList.remove('highlight');
+            // No llamamos a saveAllData() aquí para no guardar en cada cambio de color,
+            // el usuario debe usar el botón "Guardar Datos" explícitamente.
         }
     }
 
+    function createRow(itemData, isAdicional = false) {
+        const row = document.createElement('tr');
+        if (itemData.color) {
+            row.style.backgroundColor = itemData.color;
+            if (itemData.color.toLowerCase() === '#ffff99') { // Si es amarillo, mantener clase por si se borra el color
+                row.classList.add('highlight');
+            }
+        }
+
+        const cellDesc = document.createElement('td');
+        cellDesc.classList.add('description');
+        const descInput = document.createElement('input');
+        descInput.type = 'text';
+        descInput.value = itemData.desc;
+        descInput.placeholder = isAdicional ? "Descripción adicional..." : (itemData.isDeuda ? "Nueva deuda..." : "Descripción...");
+        descInput.oninput = calculateAll; // Recalcular al cambiar descripción también
+        cellDesc.appendChild(descInput);
+        cellDesc.insertAdjacentHTML('beforeend', ` <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" value="${itemData.color || '#ffffff'}" onchange="changeRowColor(this)">`);
+        row.appendChild(cellDesc);
+
+        const cellAmount = document.createElement('td');
+        const amountInput = document.createElement('input');
+        amountInput.type = 'number';
+        amountInput.value = itemData.amount === null ? '' : itemData.amount;
+        amountInput.oninput = calculateAll;
+        cellAmount.appendChild(amountInput);
+        row.appendChild(cellAmount);
+
+        return row;
+    }
+
+    function populateTable(tableId, data, isAdicional = false) {
+        const tableBody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+        tableBody.innerHTML = ''; // Limpiar filas existentes
+        data.forEach(item => {
+            item.isDeuda = (tableId === 'deudasPresupuestoTable');
+            tableBody.appendChild(createRow(item, isAdicional));
+        });
+    }
+
+
     function addGastoAdicionalRow() {
         const tableBody = document.getElementById('gastosAdicionalesTable').getElementsByTagName('tbody')[0];
-        const newRow = tableBody.insertRow();
-        const cell1 = newRow.insertCell();
-        const cell2 = newRow.insertCell();
-
-        cell1.classList.add('description');
-        cell1.innerHTML = `<input type="text" placeholder="Descripción adicional..."> <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" onchange="changeRowColor(this)">`;
-        cell2.innerHTML = '<input type="number" oninput="calculateAll()">';
+        const newRowData = { desc: "", amount: null, color: "" };
+        tableBody.appendChild(createRow(newRowData, true));
         calculateAll();
     }
 
     function calculateAll() {
-        // GASTOS FIJOS PRESUPUESTO (IZQUIERDA)
+        // GASTOS FIJOS PRESUPUESTO
         let totalFijosPresupuesto = 0;
         document.querySelectorAll('#gastosFijosPresupuestoTable tbody tr').forEach(row => {
             const input = row.cells[1].querySelector('input[type="number"]');
             if (input) totalFijosPresupuesto += parseFloat(input.value) || 0;
         });
         document.getElementById('totalFijosPresupuesto').textContent = formatCurrency(totalFijosPresupuesto);
-
         const sueldosPresupuesto = parseFloat(document.getElementById('sueldosPresupuesto').value) || 0;
         const saldoFijosPresupuesto = sueldosPresupuesto - totalFijosPresupuesto;
         document.getElementById('saldoFijosPresupuesto').textContent = formatCurrency(saldoFijosPresupuesto);
         updateSaldoClass(document.getElementById('saldoFijosPresupuesto').parentElement, saldoFijosPresupuesto);
 
-
-        // DEUDAS PRESUPUESTO (IZQUIERDA)
+        // DEUDAS PRESUPUESTO
         let totalDeudasPresupuesto = 0;
         document.querySelectorAll('#deudasPresupuestoTable tbody tr').forEach(row => {
             const input = row.cells[1].querySelector('input[type="number"]');
@@ -334,28 +437,25 @@
         });
         document.getElementById('totalDeudasPresupuesto').textContent = formatCurrency(totalDeudasPresupuesto);
 
-
-        // GASTOS FIJOS PAGADOS (DERECHA)
+        // GASTOS FIJOS PAGADOS
         let totalFijosPagado = 0;
         document.querySelectorAll('#gastosFijosPagadosTable tbody tr').forEach(row => {
             const input = row.cells[1].querySelector('input[type="number"]');
             if (input) totalFijosPagado += parseFloat(input.value) || 0;
         });
         document.getElementById('totalFijosPagado').textContent = formatCurrency(totalFijosPagado);
-
         const sueldosPagado = parseFloat(document.getElementById('sueldosPagado').value) || 0;
         const saldoFijosPagado = sueldosPagado - totalFijosPagado;
         document.getElementById('saldoFijosPagado').textContent = formatCurrency(saldoFijosPagado);
         updateSaldoClass(document.getElementById('saldoFijosPagado').parentElement, saldoFijosPagado);
 
-        // GASTOS ADICIONALES (DERECHA)
+        // GASTOS ADICIONALES
         let totalAdicionales = 0;
         document.querySelectorAll('#gastosAdicionalesTable tbody tr').forEach(row => {
             const input = row.cells[1].querySelector('input[type="number"]');
             if (input) totalAdicionales += parseFloat(input.value) || 0;
         });
         document.getElementById('totalAdicionales').textContent = formatCurrency(totalAdicionales);
-
 
         // RESUMEN FINAL
         const saldoDisponibleImagen = saldoFijosPresupuesto - totalAdicionales;
@@ -385,65 +485,120 @@
             datasets: [{
                 label: 'Monto (COP)',
                 data: [Math.max(0, totalGastado), Math.max(0, saldoFavor)],
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',
-                    'rgba(75, 192, 192, 0.7)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(75, 192, 192, 1)'
-                ],
+                backgroundColor: ['rgba(255, 99, 132, 0.7)', 'rgba(75, 192, 192, 0.7)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(75, 192, 192, 1)'],
                 borderWidth: 1
             }]
         };
-
         if (gastosChartInstance) {
             gastosChartInstance.data = data;
             gastosChartInstance.update();
         } else {
             gastosChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: data,
+                type: 'bar', data: data,
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) { return formatCurrency(value); }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return formatCurrency(context.parsed.y);
-                                }
-                            }
-                        }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return formatCurrency(value); } } } },
+                    plugins: { legend: { display: true, position: 'top' }, tooltip: { callbacks: { label: function(context) { return formatCurrency(context.parsed.y); } } } }
                 }
             });
         }
     }
 
-    window.onload = function() {
-        calculateAll();
-         // Aplicar colores iniciales a las filas "highlight" para que el picker funcione sobre ellas también
-        document.querySelectorAll('tr.highlight').forEach(row => {
-            const existingColor = window.getComputedStyle(row).backgroundColor;
-            const colorInput = row.querySelector('.color-input');
-            if (colorInput) {
-                // No es perfecto convertir rgb a hex aquí, pero para el picker inicializa con negro si no se establece
-                // Un método más robusto sería convertir el RGB a HEX si fuera necesario, pero el picker por defecto funciona.
+    function collectTableData(tableId) {
+        const data = [];
+        document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
+            const descInput = row.cells[0].querySelector('input[type="text"]');
+            const amountInput = row.cells[1].querySelector('input[type="number"]');
+            const colorInput = row.cells[0].querySelector('input[type="color"]'); // El picker de color real
+            const bgColor = row.style.backgroundColor; // El color aplicado a la fila
+
+            let effectiveColor = "";
+            if (bgColor) { // Si la fila tiene un color de fondo aplicado directamente
+                effectiveColor = rgbToHex(bgColor); // Convertir si es RGB
+            } else if (colorInput && colorInput.value !== '#000000' && colorInput.value !== '#ffffff') { // Si el picker tiene un color no por defecto
+                 effectiveColor = colorInput.value;
+            } else if (row.classList.contains('highlight')) { // Si es amarillo por clase
+                effectiveColor = '#ffff99';
             }
+
+
+            data.push({
+                desc: descInput ? descInput.value : '',
+                amount: amountInput ? (amountInput.value === '' ? null : parseFloat(amountInput.value)) : null,
+                color: effectiveColor
+            });
         });
+        return data;
+    }
+
+    // Helper para convertir RGB a Hex si es necesario (Local Storage guarda strings)
+    function rgbToHex(rgb) {
+        if (rgb.startsWith("#")) return rgb; // Ya es hex
+        let sep = rgb.indexOf(",") > -1 ? "," : " ";
+        rgb = rgb.substr(4).split(")")[0].split(sep);
+        let r = (+rgb[0]).toString(16),
+            g = (+rgb[1]).toString(16),
+            b = (+rgb[2]).toString(16);
+        if (r.length == 1) r = "0" + r;
+        if (g.length == 1) g = "0" + g;
+        if (b.length == 1) b = "0" + b;
+        return "#" + r + g + b;
+    }
+
+
+    function saveAllData() {
+        localStorage.setItem(LS_KEY_PRESUPUESTO_FIJOS, JSON.stringify(collectTableData('gastosFijosPresupuestoTable')));
+        localStorage.setItem(LS_KEY_DEUDAS, JSON.stringify(collectTableData('deudasPresupuestoTable')));
+        localStorage.setItem(LS_KEY_PAGADOS_FIJOS, JSON.stringify(collectTableData('gastosFijosPagadosTable')));
+        localStorage.setItem(LS_KEY_ADICIONALES, JSON.stringify(collectTableData('gastosAdicionalesTable')));
+
+        const sueldos = {
+            presupuesto: parseFloat(document.getElementById('sueldosPresupuesto').value) || 0,
+            pagado: parseFloat(document.getElementById('sueldosPagado').value) || 0
+        };
+        localStorage.setItem(LS_KEY_SUELDOS, JSON.stringify(sueldos));
+
+        const notification = document.getElementById('saveNotification');
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 2000);
+    }
+
+    function loadAllData() {
+        const dataPresupuestoFijos = JSON.parse(localStorage.getItem(LS_KEY_PRESUPUESTO_FIJOS)) || defaultPresupuestoFijos;
+        const dataDeudas = JSON.parse(localStorage.getItem(LS_KEY_DEUDAS)) || defaultDeudas;
+        const dataPagadosFijos = JSON.parse(localStorage.getItem(LS_KEY_PAGADOS_FIJOS)) || defaultPagadosFijos;
+        const dataAdicionales = JSON.parse(localStorage.getItem(LS_KEY_ADICIONALES)) || defaultAdicionales;
+        const sueldosData = JSON.parse(localStorage.getItem(LS_KEY_SUELDOS)) || defaultSueldos;
+
+        populateTable('gastosFijosPresupuestoTable', dataPresupuestoFijos);
+        populateTable('deudasPresupuestoTable', dataDeudas);
+        populateTable('gastosFijosPagadosTable', dataPagadosFijos);
+        populateTable('gastosAdicionalesTable', dataAdicionales, true);
+
+        document.getElementById('sueldosPresupuesto').value = sueldosData.presupuesto;
+        document.getElementById('sueldosPagado').value = sueldosData.pagado;
+
+        calculateAll();
+    }
+
+    function clearSavedData() {
+        if (confirm("¿Estás seguro de que quieres borrar todos los datos guardados localmente? Esto cargará los valores por defecto.")) {
+            localStorage.removeItem(LS_KEY_PRESUPUESTO_FIJOS);
+            localStorage.removeItem(LS_KEY_DEUDAS);
+            localStorage.removeItem(LS_KEY_PAGADOS_FIJOS);
+            localStorage.removeItem(LS_KEY_ADICIONALES);
+            localStorage.removeItem(LS_KEY_SUELDOS);
+            loadAllData(); // Recargar con valores por defecto
+            alert("Datos borrados. Se han cargado los valores por defecto.");
+        }
+    }
+
+
+    window.onload = function() {
+        loadAllData();
     };
 </script>
 
