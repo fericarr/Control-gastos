@@ -3,604 +3,424 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Gastos Mensuales (Guardado Local)</title>
-    <!-- Font Awesome CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Nuestra Boda - Fabian & Karen</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;500&display=swap');
+
+        :root {
+            --color-primary: #800020; /* Vinotinto */
+            --color-secondary: #cdaa7c; /* Dorado/Ocre */
+            --color-text: #555;
+            --font-script: 'Great Vibes', cursive;
+            --font-body: 'Montserrat', sans-serif;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .table-section, .chart-section, .actions-section {
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .table-section, .chart-section {
-            flex: 1;
-            min-width: 400px;
-        }
-        .actions-section {
-            width: 100%; /* Ocupar todo el ancho */
+            font-family: var(--font-body);
+            margin: 0;
+            padding: 0;
+            background-color: #fcfaf8;
+            color: var(--color-text);
             text-align: center;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            padding: 40px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .date {
+            font-size: 1.2rem;
+            font-weight: 300;
             margin-bottom: 20px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
+
+        .names {
+            font-family: var(--font-script);
+            font-size: 4rem;
+            color: var(--color-primary);
+            margin: 0;
+            line-height: 1.2;
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+
+        .names span {
+            font-size: 2.5rem;
+            color: var(--color-secondary);
+            display: block;
+            margin: 10px 0;
         }
-        th {
-            background-color: #e9e9e9;
-            font-weight: bold;
+
+        .section {
+            padding: 40px 20px;
+            border-bottom: 1px solid #eee;
         }
-        td input[type="number"], td input[type="text"] {
-            width: calc(100% - 12px); /* Ajustar para padding */
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
+
+        .quote {
+            font-size: 1.1rem;
+            font-weight: 300;
+            color: var(--color-secondary);
+            margin: 0;
+            padding: 0 20px;
+            font-style: italic;
+            line-height: 1.6;
         }
-        td.description {
-            width: 40%;
-            position: relative;
-        }
-        td.amount {
-            width: 30%;
-            text-align: right;
-        }
-        td.amount input[type="number"] {
-            text-align: right;
-        }
-        .total-row td {
-            font-weight: bold;
-            background-color: #f0f0f0;
-        }
-        .saldo-favor td {
-            font-weight: bold;
-            color: green;
-            background-color: #e6ffe6;
-        }
-        .saldo-contra td {
-            font-weight: bold;
-            color: red;
-            background-color: #ffe6e6;
-        }
-        .highlight {
-            background-color: #ffff99 !important;
-        }
-        h1, h2 {
-            color: #333;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 5px;
-        }
-        h2 .fas {
-            margin-right: 8px;
-            color: #555;
-        }
-        .summary-section {
-            width: 100%;
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .summary-section h2 {
-            width: 100%;
-            text-align: center;
-        }
-        .summary-section table {
-            width: auto;
+        
+        .quote .citation {
+            display: block;
             margin-top: 10px;
-        }
-        .summary-section td {
-            text-align: right;
-        }
-        .summary-section td:first-child {
-            font-weight: bold;
+            font-style: normal;
+            font-weight: 500;
         }
 
-        .action-button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            margin: 5px;
+        /* Countdown */
+        #countdown-title {
+            font-family: var(--font-script);
+            font-size: 3rem;
+            color: var(--color-primary);
+            margin-bottom: 20px;
         }
-        .action-button:hover {
-            background-color: #0056b3;
-        }
-         .action-button.save { background-color: #28a745; }
-        .action-button.save:hover { background-color: #1e7e34; }
-        .action-button.clear { background-color: #dc3545; }
-        .action-button.clear:hover { background-color: #c82333; }
 
-        .add-button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
+        .countdown-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .countdown-box {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            min-width: 70px;
+        }
+
+        .countdown-box .number {
+            font-size: 2.5rem;
+            font-weight: 500;
+            color: var(--color-primary);
+        }
+
+        .countdown-box .label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--color-text);
+        }
+
+        /* Event Info */
+        .event-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
             margin-bottom: 10px;
         }
-        .add-button:hover {
-            background-color: #45a049;
+
+        .event-details p {
+            margin: 5px 0;
+            font-size: 1.1rem;
+            line-height: 1.6;
         }
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
+        
+        .event-time {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            font-weight: 500;
         }
-        .color-picker-icon {
-            cursor: pointer;
-            margin-left: 5px;
-            color: #777;
+
+        .event-time span {
+            padding: 0 20px;
         }
-        .color-picker-icon:hover {
-            color: #333;
+
+        .event-time .separator {
+            border-left: 1px solid #ccc;
+            height: 30px;
         }
-        .color-input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-            position: absolute;
-        }
-        #saveNotification {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #28a745;
+
+        /* Button */
+        .btn {
+            display: inline-block;
+            background-color: var(--color-secondary);
             color: white;
-            padding: 10px 20px;
+            padding: 12px 30px;
+            text-decoration: none;
             border-radius: 5px;
-            display: none;
-            z-index: 1000;
+            font-weight: 500;
+            margin-top: 15px;
+            transition: background-color 0.3s ease;
         }
+
+        .btn:hover {
+            background-color: #b89a6a;
+        }
+
+        /* Dress Code Card */
+        .card {
+            background: white;
+            padding: 20px; /* Reducido de 30px */
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .dress-code-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Reducido de 30px */
+            margin-top: 10px; /* Reducido de 20px */
+        }
+
+        .dress-code-section h3 {
+            margin-top: 0;
+            margin-bottom: 5px; /* Reducido de 10px */
+            font-weight: 500;
+            color: var(--color-primary);
+        }
+
+        .colors {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .color-dot {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: 1px solid #eee;
+        }
+        
+        .color-dot.white { background-color: #f0f0f0; }
+        .color-dot.vinotinto { background-color: #800020; }
+        .color-dot.morado { background-color: #800080; }
+        .color-dot.beach { background-color: #f5deb3; } /* Color beige/arena para "beach" */
+
+
+        /* Generic Info Sections */
+        .info-icon {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 15px;
+        }
+
+        /* Ajuste específico para el icono del dress code */
+        .card .info-icon {
+            margin-bottom: 10px; /* Ajuste para reducir el espacio */
+        }
+
+        .info-section p {
+            max-width: 350px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* Audio Player */
+        .audio-player {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        #play-pause-btn {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 5px;
+            background-color: #ddd;
+            border-radius: 5px;
+        }
+        
+        footer {
+            padding: 50px 20px;
+            font-family: var(--font-script);
+            font-size: 2.5rem;
+            color: var(--color-primary);
+        }
+
     </style>
 </head>
 <body>
 
-<h1><i class="fas fa-wallet"></i> Control de Gastos Mensuales</h1>
+    <div class="container">
 
-<div class="actions-section">
-    <button onclick="saveAllData()" class="action-button save"><i class="fas fa-save"></i> Guardar Datos</button>
-    <button onclick="clearSavedData()" class="action-button clear"><i class="fas fa-trash-alt"></i> Borrar Datos Guardados</button>
-</div>
-<div id="saveNotification">¡Datos guardados localmente!</div>
+        <header>
+            <div class="date">Sabado - 06/Dic/2025</div>
+            <h1 class="names">
+                Fabian Buitrago
+                <span>&</span>
+                Karen Barragán
+            </h1>
+        </header>
 
+        <section class="section">
+             <audio id="wedding-song" src="tu_cancion.mp3" preload="auto"></audio>
+            <div class="audio-player">
+                <button id="play-pause-btn">▶</button>
+                <div class="progress-bar"></div>
+            </div>
+        </section>
+        
+        <section class="section">
+            <p class="quote">"Mejores son dos que uno... Si uno de ellos cae, el otro puede levantar al otro... Una cuerda de tres hilos no se rompe fácilmente"
+                <span class="citation">Eclesiastés 4:9-12</span>
+            </p>
+        </section>
 
-<div class="container">
-    <!-- Columna Izquierda: Presupuesto GASTOS FIJOS -->
-    <div class="table-section">
-        <h2><i class="fas fa-clipboard-list"></i> GASTOS MENSUALES FIJOS (PRESUPUESTO)</h2>
-        <table id="gastosFijosPresupuestoTable">
-            <thead>
-                <tr>
-                    <th>Descripción <i class="fas fa-palette" style="font-size:0.8em; color:#aaa;" title="Haga clic en el icono de la fila para cambiar el color"></i></th>
-                    <th>Debe</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Filas se generan o cargan por JS -->
-            </tbody>
-            <tfoot>
-                <tr class="total-row"><td>Total Presupuestado</td><td id="totalFijosPresupuesto" class="amount">0</td></tr>
-                <tr class="total-row"><td>Sueldos</td><td><input type="number" id="sueldosPresupuesto" value="7300000" oninput="calculateAll()"></td></tr>
-                <tr class="saldo-favor"><td>Saldo a Favor (Presupuesto)</td><td id="saldoFijosPresupuesto" class="amount">0</td></tr>
-            </tfoot>
-        </table>
+        <section class="section">
+            <div id="countdown-title">Falta</div>
+            <div id="countdown" class="countdown-container">
+                <div class="countdown-box"><div id="days" class="number">00</div><div class="label">Días</div></div>
+                <div class="countdown-box"><div id="hours" class="number">00</div><div class="label">Hs</div></div>
+                <div class="countdown-box"><div id="minutes" class="number">00</div><div class="label">Min</div></div>
+                <div class="countdown-box"><div id="seconds" class="number">00</div><div class="label">Seg</div></div>
+            </div>
+        </section>
 
-        <h2><i class="fas fa-credit-card"></i> DEUDAS (PRESUPUESTO)</h2>
-        <table id="deudasPresupuestoTable">
-             <thead>
-                <tr>
-                    <th>Descripción <i class="fas fa-palette" style="font-size:0.8em; color:#aaa;" title="Haga clic en el icono de la fila para cambiar el color"></i></th>
-                    <th>Monto</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Filas se generan o cargan por JS -->
-            </tbody>
-            <tfoot>
-                <tr class="total-row"><td>Total Deudas (Presupuesto)</td><td id="totalDeudasPresupuesto" class="amount">0</td></tr>
-            </tfoot>
-        </table>
+        <section class="section event-info">
+            <img src="https://img.icons8.com/ios-filled/100/800020/church.png" alt="Icono de Iglesia" class="event-icon"/>
+            <h2>Ceremonia y Recepcion</h2>
+            <div class="event-details">
+                <p>HACIENDA FRAILEJONES, Vereda Yerbabuena, Chía, Cundinamarca</p>
+            </div>
+            <div class="event-time">
+                <span>06 de Diciembre 2025</span>
+                <div class="separator"></div>
+                <span>3:00 PM</span>
+            </div>
+            <a href="https://www.google.com/maps/dir//Vereda+Yerbabuena,+Ch%C3%ADa,+Cundinamarca/@4.8496583,-74.0892529,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x8e3f883a180b4021:0x93a00a8deb201e6b!2m2!1d-74.0068509!2d4.8496633?entry=ttu&g_ep=EgoyMDI1MDgyNS4wIKXMDSoASAFQAw%3D%3D" class="btn" target="_blank">Ver ubicación</a>
+        </section>
+
+        <section class="section">
+             <div class="card">
+                <img src="https://img.icons8.com/ios/100/800020/t-shirt.png" alt="Icono de Ropa" class="info-icon"/> <h2>Código de Vestuario</h2>
+                <div class="dress-code-content">
+                    <p>Formal Elegante</p>
+                    <p>Por favor, consideren otros tonos que no sean:</p>
+                    <div class="dress-code-section">
+                        <h3>Ellos y Ellas:</h3>
+                        <div class="colors">
+                            <div class="color-dot white"></div>
+                            <div class="color-dot beach"></div> 
+                        </div>
+                    </div>
+                </div>
+             </div>
+        </section>
+
+        <section class="section info-section">
+            <img src="https://img.icons8.com/ios-filled/100/800020/paper-plane.png" alt="Icono de Carta" class="info-icon"/>
+            <h2>Detalles</h2>
+            <p>Tu cariño y compañía es lo más importante, pero si deseas tener un detalle con nosotros, un aporte en efectivo será recibido con gratitud.</p>
+        </section>
+
+        <section class="section info-section">
+             <img src="https://img.icons8.com/ios-filled/100/800020/like.png" alt="Icono de Corazón" class="info-icon"/>
+            <h2>Confirmar Asistencia</h2>
+            <p>Nos hace una ilusión inmensa que seas testigo de nuestro amor. Te esperamos para celebrar juntos nuestro 'sí, quiero'</p>
+            <a href="#" class="btn" target="_blank">CONFIRMAR</a>
+        </section>
+
+        <footer>
+            ¡Gracias por acompañarnos!
+            <p class="names" style="font-size: 3rem; margin-top: 20px;">
+                Fabian Buitrago
+                <span>&</span>
+                Karen Barragán
+            </p>
+        </footer>
+
     </div>
 
-    <!-- Columna Derecha: Gastos Reales / Pagados -->
-    <div class="table-section">
-        <h2><i class="fas fa-money-check-alt"></i> GASTOS MENSUALES FIJOS (PAGADO)</h2>
-        <table id="gastosFijosPagadosTable">
-            <thead>
-                <tr>
-                    <th>Descripción <i class="fas fa-palette" style="font-size:0.8em; color:#aaa;" title="Haga clic en el icono de la fila para cambiar el color"></i></th>
-                    <th>Pagado</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Filas se generan o cargan por JS -->
-            </tbody>
-            <tfoot>
-                <tr class="total-row"><td>Total Pagado</td><td id="totalFijosPagado" class="amount">0</td></tr>
-                <tr class="total-row"><td>Sueldos</td><td><input type="number" id="sueldosPagado" value="7300000" oninput="calculateAll()"></td></tr>
-                <tr class="saldo-favor"><td>Saldo a Favor Gastos Fijos</td><td id="saldoFijosPagado" class="amount">0</td></tr>
-            </tfoot>
-        </table>
+    <script>
+        // --- CONTADOR REGRESIVO ---
+        const countdown = () => {
+            // Fecha del evento (Año, Mes (0-11), Día, Hora, Minuto, Segundo)
+            const eventDate = new Date("2025-12-06T15:00:00").getTime();
+            const now = new Date().getTime();
+            const difference = eventDate - now;
 
-        <h2><i class="fas fa-cart-plus"></i> GASTOS ADICIONALES (PAGADO)</h2>
-        <button onclick="addGastoAdicionalRow()" class="add-button"><i class="fas fa-plus"></i> Añadir Gasto</button>
-        <table id="gastosAdicionalesTable">
-            <thead>
-                <tr>
-                    <th>Descripción <i class="fas fa-palette" style="font-size:0.8em; color:#aaa;" title="Haga clic en el icono de la fila para cambiar el color"></i></th>
-                    <th>Monto</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Filas se generan o cargan por JS -->
-            </tbody>
-            <tfoot>
-                <tr class="total-row"><td>Total Gastos Adicionales</td><td id="totalAdicionales" class="amount">0</td></tr>
-            </tfoot>
-        </table>
-    </div>
-</div>
+            // Cálculos de tiempo
+            const seconds = 1000;
+            const minutes = seconds * 60;
+            const hours = minutes * 60;
+            const days = hours * 24;
 
-<div class="summary-section">
-    <h2><i class="fas fa-file-invoice-dollar"></i> RESUMEN FINAL (basado en PAGADO donde aplique)</h2>
-    <table>
-        <tbody>
-            <tr class="saldo-favor"><td>SALDO A FAVOR DISPONIBLE (Presupuesto - Adicionales)</td><td id="saldoFinalDisponible" class="amount">0</td></tr>
-            <tr class="saldo-favor"><td>SALDO A FAVOR TOTAL (Pagado)</td><td id="saldoFinalTotalPagado" class="amount">0</td></tr>
-        </tbody>
-    </table>
-</div>
+            let timeDays = Math.floor(difference / days);
+            let timeHours = Math.floor((difference % days) / hours);
+            let timeMinutes = Math.floor((difference % hours) / minutes);
+            let timeSeconds = Math.floor((difference % minutes) / seconds);
 
-<div class="chart-section">
-    <h2><i class="fas fa-chart-bar"></i> Estadística de Gastos (Pagado)</h2>
-    <div class="chart-container">
-        <canvas id="gastosChart"></canvas>
-    </div>
-</div>
+            // Añadir ceros si es necesario
+            timeDays = timeDays < 10 ? "0" + timeDays : timeDays;
+            timeHours = timeHours < 10 ? "0" + timeHours : timeHours;
+            timeMinutes = timeMinutes < 10 ? "0" + timeMinutes : timeMinutes;
+            timeSeconds = timeSeconds < 10 ? "0" + timeSeconds : timeSeconds;
 
+            // Actualizar HTML
+            document.getElementById("days").innerText = timeDays;
+            document.getElementById("hours").innerText = timeHours;
+            document.getElementById("minutes").innerText = timeMinutes;
+            document.getElementById("seconds").innerText = timeSeconds;
 
-<script>
-    let gastosChartInstance = null;
-    const LS_KEY_PRESUPUESTO_FIJOS = 'gastosFijosPresupuestoData';
-    const LS_KEY_DEUDAS = 'deudasPresupuestoData';
-    const LS_KEY_PAGADOS_FIJOS = 'gastosFijosPagadosData';
-    const LS_KEY_ADICIONALES = 'gastosAdicionalesData';
-    const LS_KEY_SUELDOS = 'sueldosData'; // Para guardar ambos sueldos
-
-    // Datos por defecto si no hay nada guardado
-    const defaultPresupuestoFijos = [
-        { desc: "apoyo mama fabian", amount: 200000, color: "" },
-        { desc: "tajerta rapi + thor + lu + gasolina + comida", amount: 2410000, color: "" },
-        { desc: "Pago cuota + administracion", amount: 2000000, color: "" },
-        { desc: "servicios casa bogota", amount: 200000, color: "" },
-        { desc: "mercado mensual casa bgta", amount: 320000, color: "" },
-        { desc: "esposa varios", amount: 100000, color: "" },
-        { desc: "cosas fabian", amount: 100000, color: "" },
-        { desc: "celular mio", amount: 50000, color: "" },
-        { desc: "ahorro bolsillo", amount: 0, color: "#ffff99" },
-        { desc: "gasolina carro", amount: 0, color: "#ffff99" },
-        { desc: "bolsillo mtto carro", amount: 0, color: "#ffff99" },
-        { desc: "fusa karen", amount: 100000, color: "" },
-        { desc: "thor bolsillo", amount: 0, color: "#ffff99" },
-        { desc: "abue fabian", amount: 100000, color: "" },
-        { desc: "valentina Universidad", amount: 150000, color: "" },
-        { desc: "pasajes karen", amount: 130000, color: "" }
-    ];
-    const defaultDeudas = [
-        { desc: "TARJETA RAPPY", amount: 6800000, color: "" },
-        { desc: "DAVIPLATA", amount: 250000, color: "" },
-        { desc: "", amount: null, color: "" } // Fila vacía por defecto
-    ];
-     const defaultPagadosFijos = [ // Similar a presupuesto pero con valores de la imagen
-        { desc: "apoyo mama fabian", amount: 200000, color: "" },
-        { desc: "tajerta rapi + thor + lu", amount: 0, color: "" },
-        { desc: "Pago cuota + administracion", amount: 2000000, color: "" },
-        { desc: "servicios casa bogota", amount: 200000, color: "" },
-        { desc: "mercado mensual casa bgta", amount: 320000, color: "" },
-        { desc: "esposa varios", amount: 100000, color: "" },
-        { desc: "cosas fabian", amount: 100000, color: "" },
-        { desc: "celular mio", amount: 50000, color: "" },
-        { desc: "ahorro bolsillo", amount: 0, color: "#ffff99" },
-        { desc: "gasolina carro", amount: 0, color: "#ffff99" },
-        { desc: "bolsillo mtto carro", amount: 0, color: "#ffff99" },
-        { desc: "fusa karen", amount: 100000, color: "" },
-        { desc: "thor bolsillo", amount: 0, color: "#ffff99" },
-        { desc: "abue fabian", amount: 100000, color: "" },
-        { desc: "valentina Universidad", amount: 150000, color: "" },
-        { desc: "pasajes karen", amount: 130000, color: "" }
-    ];
-    const defaultAdicionales = [
-        { desc: "", amount: null, color: "" } // Una fila vacía por defecto
-    ];
-    const defaultSueldos = {
-        presupuesto: 7300000,
-        pagado: 7300000
-    };
-
-
-    function formatCurrency(value) {
-        return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value || 0);
-    }
-
-    function openColorPicker(iconElement) {
-        const colorInput = iconElement.nextElementSibling;
-        if (colorInput && colorInput.type === 'color') {
-            colorInput.click();
-        }
-    }
-
-    function changeRowColor(colorInputElement) {
-        const row = colorInputElement.closest('tr');
-        if (row) {
-            row.style.backgroundColor = colorInputElement.value;
-            row.classList.remove('highlight');
-            // No llamamos a saveAllData() aquí para no guardar en cada cambio de color,
-            // el usuario debe usar el botón "Guardar Datos" explícitamente.
-        }
-    }
-
-    function createRow(itemData, isAdicional = false) {
-        const row = document.createElement('tr');
-        if (itemData.color) {
-            row.style.backgroundColor = itemData.color;
-            if (itemData.color.toLowerCase() === '#ffff99') { // Si es amarillo, mantener clase por si se borra el color
-                row.classList.add('highlight');
+            // Detener el contador si la fecha ha pasado
+            if (difference < 0) {
+                clearInterval(countdownInterval);
+                document.getElementById("countdown-title").innerText = "¡Llegó el día!";
+                document.getElementById("days").innerText = "00";
+                document.getElementById("hours").innerText = "00";
+                document.getElementById("minutes").innerText = "00";
+                document.getElementById("seconds").innerText = "00";
             }
-        }
-
-        const cellDesc = document.createElement('td');
-        cellDesc.classList.add('description');
-        const descInput = document.createElement('input');
-        descInput.type = 'text';
-        descInput.value = itemData.desc;
-        descInput.placeholder = isAdicional ? "Descripción adicional..." : (itemData.isDeuda ? "Nueva deuda..." : "Descripción...");
-        descInput.oninput = calculateAll; // Recalcular al cambiar descripción también
-        cellDesc.appendChild(descInput);
-        cellDesc.insertAdjacentHTML('beforeend', ` <i class="fas fa-palette color-picker-icon" onclick="openColorPicker(this)"></i><input type="color" class="color-input" value="${itemData.color || '#ffffff'}" onchange="changeRowColor(this)">`);
-        row.appendChild(cellDesc);
-
-        const cellAmount = document.createElement('td');
-        const amountInput = document.createElement('input');
-        amountInput.type = 'number';
-        amountInput.value = itemData.amount === null ? '' : itemData.amount;
-        amountInput.oninput = calculateAll;
-        cellAmount.appendChild(amountInput);
-        row.appendChild(cellAmount);
-
-        return row;
-    }
-
-    function populateTable(tableId, data, isAdicional = false) {
-        const tableBody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
-        tableBody.innerHTML = ''; // Limpiar filas existentes
-        data.forEach(item => {
-            item.isDeuda = (tableId === 'deudasPresupuestoTable');
-            tableBody.appendChild(createRow(item, isAdicional));
-        });
-    }
-
-
-    function addGastoAdicionalRow() {
-        const tableBody = document.getElementById('gastosAdicionalesTable').getElementsByTagName('tbody')[0];
-        const newRowData = { desc: "", amount: null, color: "" };
-        tableBody.appendChild(createRow(newRowData, true));
-        calculateAll();
-    }
-
-    function calculateAll() {
-        // GASTOS FIJOS PRESUPUESTO
-        let totalFijosPresupuesto = 0;
-        document.querySelectorAll('#gastosFijosPresupuestoTable tbody tr').forEach(row => {
-            const input = row.cells[1].querySelector('input[type="number"]');
-            if (input) totalFijosPresupuesto += parseFloat(input.value) || 0;
-        });
-        document.getElementById('totalFijosPresupuesto').textContent = formatCurrency(totalFijosPresupuesto);
-        const sueldosPresupuesto = parseFloat(document.getElementById('sueldosPresupuesto').value) || 0;
-        const saldoFijosPresupuesto = sueldosPresupuesto - totalFijosPresupuesto;
-        document.getElementById('saldoFijosPresupuesto').textContent = formatCurrency(saldoFijosPresupuesto);
-        updateSaldoClass(document.getElementById('saldoFijosPresupuesto').parentElement, saldoFijosPresupuesto);
-
-        // DEUDAS PRESUPUESTO
-        let totalDeudasPresupuesto = 0;
-        document.querySelectorAll('#deudasPresupuestoTable tbody tr').forEach(row => {
-            const input = row.cells[1].querySelector('input[type="number"]');
-            if (input) totalDeudasPresupuesto += parseFloat(input.value) || 0;
-        });
-        document.getElementById('totalDeudasPresupuesto').textContent = formatCurrency(totalDeudasPresupuesto);
-
-        // GASTOS FIJOS PAGADOS
-        let totalFijosPagado = 0;
-        document.querySelectorAll('#gastosFijosPagadosTable tbody tr').forEach(row => {
-            const input = row.cells[1].querySelector('input[type="number"]');
-            if (input) totalFijosPagado += parseFloat(input.value) || 0;
-        });
-        document.getElementById('totalFijosPagado').textContent = formatCurrency(totalFijosPagado);
-        const sueldosPagado = parseFloat(document.getElementById('sueldosPagado').value) || 0;
-        const saldoFijosPagado = sueldosPagado - totalFijosPagado;
-        document.getElementById('saldoFijosPagado').textContent = formatCurrency(saldoFijosPagado);
-        updateSaldoClass(document.getElementById('saldoFijosPagado').parentElement, saldoFijosPagado);
-
-        // GASTOS ADICIONALES
-        let totalAdicionales = 0;
-        document.querySelectorAll('#gastosAdicionalesTable tbody tr').forEach(row => {
-            const input = row.cells[1].querySelector('input[type="number"]');
-            if (input) totalAdicionales += parseFloat(input.value) || 0;
-        });
-        document.getElementById('totalAdicionales').textContent = formatCurrency(totalAdicionales);
-
-        // RESUMEN FINAL
-        const saldoDisponibleImagen = saldoFijosPresupuesto - totalAdicionales;
-        document.getElementById('saldoFinalDisponible').textContent = formatCurrency(saldoDisponibleImagen);
-        updateSaldoClass(document.getElementById('saldoFinalDisponible').parentElement, saldoDisponibleImagen);
-
-        const saldoTotalPagadoConAdicionales = saldoFijosPagado - totalAdicionales;
-        document.getElementById('saldoFinalTotalPagado').textContent = formatCurrency(saldoTotalPagadoConAdicionales);
-        updateSaldoClass(document.getElementById('saldoFinalTotalPagado').parentElement, saldoTotalPagadoConAdicionales);
-
-        updateChart(totalFijosPagado + totalAdicionales, saldoTotalPagadoConAdicionales);
-    }
-
-    function updateSaldoClass(element, value) {
-        element.classList.remove('saldo-favor', 'saldo-contra');
-        if (value >= 0) {
-            element.classList.add('saldo-favor');
-        } else {
-            element.classList.add('saldo-contra');
-        }
-    }
-
-    function updateChart(totalGastado, saldoFavor) {
-        const ctx = document.getElementById('gastosChart').getContext('2d');
-        const data = {
-            labels: ['Total Gastado (Pagado)', 'Saldo a Favor Final (Pagado)'],
-            datasets: [{
-                label: 'Monto (COP)',
-                data: [Math.max(0, totalGastado), Math.max(0, saldoFavor)],
-                backgroundColor: ['rgba(255, 99, 132, 0.7)', 'rgba(75, 192, 192, 0.7)'],
-                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(75, 192, 192, 1)'],
-                borderWidth: 1
-            }]
         };
-        if (gastosChartInstance) {
-            gastosChartInstance.data = data;
-            gastosChartInstance.update();
-        } else {
-            gastosChartInstance = new Chart(ctx, {
-                type: 'bar', data: data,
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return formatCurrency(value); } } } },
-                    plugins: { legend: { display: true, position: 'top' }, tooltip: { callbacks: { label: function(context) { return formatCurrency(context.parsed.y); } } } }
-                }
-            });
-        }
-    }
 
-    function collectTableData(tableId) {
-        const data = [];
-        document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
-            const descInput = row.cells[0].querySelector('input[type="text"]');
-            const amountInput = row.cells[1].querySelector('input[type="number"]');
-            const colorInput = row.cells[0].querySelector('input[type="color"]'); // El picker de color real
-            const bgColor = row.style.backgroundColor; // El color aplicado a la fila
+        const countdownInterval = setInterval(countdown, 1000);
+        // Ejecutar una vez al cargar para evitar el retraso de 1 segundo
+        countdown();
 
-            let effectiveColor = "";
-            if (bgColor) { // Si la fila tiene un color de fondo aplicado directamente
-                effectiveColor = rgbToHex(bgColor); // Convertir si es RGB
-            } else if (colorInput && colorInput.value !== '#000000' && colorInput.value !== '#ffffff') { // Si el picker tiene un color no por defecto
-                 effectiveColor = colorInput.value;
-            } else if (row.classList.contains('highlight')) { // Si es amarillo por clase
-                effectiveColor = '#ffff99';
+        // --- REPRODUCTOR DE AUDIO ---
+        const audio = document.getElementById('wedding-song');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+
+        playPauseBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                playPauseBtn.innerHTML = '❚❚';
+            } else {
+                audio.pause();
+                playPauseBtn.innerHTML = '▶';
             }
-
-
-            data.push({
-                desc: descInput ? descInput.value : '',
-                amount: amountInput ? (amountInput.value === '' ? null : parseFloat(amountInput.value)) : null,
-                color: effectiveColor
-            });
         });
-        return data;
-    }
 
-    // Helper para convertir RGB a Hex si es necesario (Local Storage guarda strings)
-    function rgbToHex(rgb) {
-        if (rgb.startsWith("#")) return rgb; // Ya es hex
-        let sep = rgb.indexOf(",") > -1 ? "," : " ";
-        rgb = rgb.substr(4).split(")")[0].split(sep);
-        let r = (+rgb[0]).toString(16),
-            g = (+rgb[1]).toString(16),
-            b = (+rgb[2]).toString(16);
-        if (r.length == 1) r = "0" + r;
-        if (g.length == 1) g = "0" + g;
-        if (b.length == 1) b = "0" + b;
-        return "#" + r + g + b;
-    }
-
-
-    function saveAllData() {
-        localStorage.setItem(LS_KEY_PRESUPUESTO_FIJOS, JSON.stringify(collectTableData('gastosFijosPresupuestoTable')));
-        localStorage.setItem(LS_KEY_DEUDAS, JSON.stringify(collectTableData('deudasPresupuestoTable')));
-        localStorage.setItem(LS_KEY_PAGADOS_FIJOS, JSON.stringify(collectTableData('gastosFijosPagadosTable')));
-        localStorage.setItem(LS_KEY_ADICIONALES, JSON.stringify(collectTableData('gastosAdicionalesTable')));
-
-        const sueldos = {
-            presupuesto: parseFloat(document.getElementById('sueldosPresupuesto').value) || 0,
-            pagado: parseFloat(document.getElementById('sueldosPagado').value) || 0
-        };
-        localStorage.setItem(LS_KEY_SUELDOS, JSON.stringify(sueldos));
-
-        const notification = document.getElementById('saveNotification');
-        notification.style.display = 'block';
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 2000);
-    }
-
-    function loadAllData() {
-        const dataPresupuestoFijos = JSON.parse(localStorage.getItem(LS_KEY_PRESUPUESTO_FIJOS)) || defaultPresupuestoFijos;
-        const dataDeudas = JSON.parse(localStorage.getItem(LS_KEY_DEUDAS)) || defaultDeudas;
-        const dataPagadosFijos = JSON.parse(localStorage.getItem(LS_KEY_PAGADOS_FIJOS)) || defaultPagadosFijos;
-        const dataAdicionales = JSON.parse(localStorage.getItem(LS_KEY_ADICIONALES)) || defaultAdicionales;
-        const sueldosData = JSON.parse(localStorage.getItem(LS_KEY_SUELDOS)) || defaultSueldos;
-
-        populateTable('gastosFijosPresupuestoTable', dataPresupuestoFijos);
-        populateTable('deudasPresupuestoTable', dataDeudas);
-        populateTable('gastosFijosPagadosTable', dataPagadosFijos);
-        populateTable('gastosAdicionalesTable', dataAdicionales, true);
-
-        document.getElementById('sueldosPresupuesto').value = sueldosData.presupuesto;
-        document.getElementById('sueldosPagado').value = sueldosData.pagado;
-
-        calculateAll();
-    }
-
-    function clearSavedData() {
-        if (confirm("¿Estás seguro de que quieres borrar todos los datos guardados localmente? Esto cargará los valores por defecto.")) {
-            localStorage.removeItem(LS_KEY_PRESUPUESTO_FIJOS);
-            localStorage.removeItem(LS_KEY_DEUDAS);
-            localStorage.removeItem(LS_KEY_PAGADOS_FIJOS);
-            localStorage.removeItem(LS_KEY_ADICIONALES);
-            localStorage.removeItem(LS_KEY_SUELDOS);
-            loadAllData(); // Recargar con valores por defecto
-            alert("Datos borrados. Se han cargado los valores por defecto.");
-        }
-    }
-
-
-    window.onload = function() {
-        loadAllData();
-    };
-</script>
-
+    </script>
 </body>
 </html>
